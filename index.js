@@ -30,64 +30,64 @@ const server = app.listen(process.env.PORT, () =>
   console.log(`server is running on port ${process.env.PORT}`)
 );
 
-// const io = socketio(server, {
-//   cors: {
-//     origin: "*",
-//   },
-// });
+const io = socketio(server, {
+  cors: {
+    origin: "*",
+  },
+});
 
-// const userData = new Map();
-// io.on("connection", (socket) => {
-//   const userId = socket.handshake.query.userId;
-//   userData.set(userId, socket.id);
-//   socket.on("message", async (message) => {
-//     const receiver = userData.get(message?.receiver);
-//     if (receiver) {
-//       io.to(receiver).emit("live", message);
-//     }
+const userData = new Map();
+io.on("connection", (socket) => {
+  const userId = socket.handshake.query.userId;
+  userData.set(userId, socket.id);
+  socket.on("message", async (message) => {
+    const receiver = userData.get(message?.receiver);
+    if (receiver) {
+      io.to(receiver).emit("live", message);
+    }
 
-//     socket.emit("confirm", message);
-//     const newMessage = new Message({
-//       sender: message.sender,
-//       receiver: message.receiver,
-//       message: message.message,
-//     });
-//     const savedMessage = await newMessage.save();
-//     let findedConversion = await Conversion.findOne({
-//       parties: { $all: [message.sender, message.receiver] },
-//     });
-//     if (!findedConversion) {
-//       findedConversion = new Conversion({
-//         parties: [message.sender, message.receiver],
-//         message: [savedMessage._id],
-//       });
-//     } else {
-//       findedConversion.message.push(savedMessage._id);
-//     }
-//     await findedConversion.save();
-//   });
+    socket.emit("confirm", message);
+    const newMessage = new Message({
+      sender: message.sender,
+      receiver: message.receiver,
+      message: message.message,
+    });
+    const savedMessage = await newMessage.save();
+    let findedConversion = await Conversion.findOne({
+      parties: { $all: [message.sender, message.receiver] },
+    });
+    if (!findedConversion) {
+      findedConversion = new Conversion({
+        parties: [message.sender, message.receiver],
+        message: [savedMessage._id],
+      });
+    } else {
+      findedConversion.message.push(savedMessage._id);
+    }
+    await findedConversion.save();
+  });
 
-//   socket.on("onSelect", async (id) => {
-//     const findedUser = userData.get(id.selected);
-//     if (findedUser) {
-//       socket.emit("status", { online: true });
-//     } else {
-//       socket.emit("status", { online: false });
-//     }
+  socket.on("onSelect", async (id) => {
+    const findedUser = userData.get(id.selected);
+    if (findedUser) {
+      socket.emit("status", { online: true });
+    } else {
+      socket.emit("status", { online: false });
+    }
 
-//     const history = await Conversion.findOne({
-//       parties: { $all: [id.selected, id.sender] },
-//     }).populate([
-//       {
-//         path: "message",
-//       },
-//     ]);
+    const history = await Conversion.findOne({
+      parties: { $all: [id.selected, id.sender] },
+    }).populate([
+      {
+        path: "message",
+      },
+    ]);
 
-//     socket.emit("history", history);
-//   });
+    socket.emit("history", history);
+  });
 
-//   socket.on("disconnect", () => {
-//     userData.delete(userId);
-//     io.emit("status", { online: false });
-//   });
-// });
+  socket.on("disconnect", () => {
+    userData.delete(userId);
+    io.emit("status", { online: false });
+  });
+});
