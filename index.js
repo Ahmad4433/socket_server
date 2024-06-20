@@ -12,7 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.get("/", (req, res, next) => {
+app.get("/", (req, res,next) => {
   res.send("server is running");
 });
 app.use("/user", userAccountRoutes);
